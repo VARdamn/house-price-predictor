@@ -1,3 +1,5 @@
-pydantic-settings
-aiogram==2.25.1
+aiogram==2.25.2
+uvloop
+aiohttp==3.8.1
 requests
+pydantic-settings
