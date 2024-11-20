@@ -1,5 +1,7 @@
 # House Price Predictor
 
+**Use Python3.11 or lower**
+
 ## Setup
 
 1. **Create virtual environment**
