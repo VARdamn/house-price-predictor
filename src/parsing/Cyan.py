@@ -86,7 +86,7 @@ class Cyan:
                 self.__get_offers_paginated(page=page)
             )
             page += 1
-            sleep(uniform(2, 3.5))
+            sleep(uniform(3, 7))
         
         logger.success(f'Successfully parsed {len(offers)} offers!')
         return offers
@@ -105,25 +105,33 @@ class Cyan:
             price = offer.get('bargainTerms', {}).get('priceRur', 0) or offer.get('bargainTerms', {}).get('price', -1)
             
             parsed.append({
-                'floor': offer.get('floorNumber', -1),
-                'floors_count': offer.get('building', {}).get('floorsCount', -1),
-                'area': float(offer.get('livingArea', 0) or offer.get('totalArea', -1)),
-                'rooms_count': offer.get('roomsCount', -1),
+                'creation_date': offer.get('creationDate') or -1,
+                'floor': offer.get('floorNumber') or -1,
+                'floors_count': offer.get('building', {}).get('floorsCount') or -1,
+                'area': float(offer.get('totalArea') or -1),
+                'living_area': float(offer.get('livingArea') or -1),
+                'kitchen_area': float(offer.get('kitchenArea') or -1),
+                'rooms_count': offer.get('roomsCount') or -1,
                 'has_furniture': offer.get('hasFurniture') or False,
-                'address': offer.get('geo',{}).get('userInput', -1),
+                'address': offer.get('geo',{}).get('userInput') or -1,
                 'district': -1 if not len(district) or not district[0] else district[0],
                 'nearest_underground': nearest_underground,
                 'nearest_railway': nearest_railway,
                 'price': price,
                 'balconies_count': offer.get('balconiesCount') or 0,
-                'is_seller_agent': offer.get('user', {}).get('isAgent', 0) or offer.get('user', {}).get('isSubAgent', -1) 
+                'is_seller_agent': offer.get('user', {}).get('isAgent', 0) or offer.get('user', {}).get('isSubAgent', -1),
+                'builduing_year': offer.get('building', {}).get('buildYear') or -1,
+                'cargo_lifts_count': offer.get('building', {}).get('cargoLiftsCount') or 0,
+                'passenger_lifts_count': offer.get('building', {}).get('passengerLiftsCount') or 0,
+                'parking': offer.get('building', {}).get('parking').get('type') if offer.get('building', {}).get('parking') else -1,
             })   
+
 
         return parsed
     
     def dump_to_csv(self, offers):
-        headers = ["Этаж", "Кол-во этажей", "Площадь", "Кол-во комнат", "Наличие мебели", "Адрес", "Округ", "Ближайшее метро, мин.", "Ближайший вокзал, мин.", "Стоимость, мес.", "Кол-во балконов", "Продажа от агента"]
-        mapped_keys = ["floor", "floors_count", "area", "rooms_count", "has_furniture", "address", "district", "nearest_underground", "nearest_railway", "price", "balconies_count", "is_seller_agent"]
+        headers = ["Дата создания объявления", "Этаж", "Кол-во этажей", "Площадь", "Жилая площадь", "Площадь кухни", "Кол-во комнат", "Наличие мебели", "Адрес", "Округ", "Ближайшее метро, мин.", "Ближайший вокзал, мин.", "Стоимость, мес.", "Кол-во балконов", "Продажа от агента", "Год постройки здания", "Кол-во грузовых лифтов", "Кол-во пассажирских лифтов", "Парковка"]
+        mapped_keys = ["creation_date", "floor", "floors_count", "area", "living_area", "kitchen_area", "rooms_count", "has_furniture", "address", "district", "nearest_underground", "nearest_railway", "price", "balconies_count", "is_seller_agent", "builduing_year", "cargo_lifts_count", "passenger_lifts_count", "parking"]
         
         if len(headers) != len(mapped_keys):
             raise ValueError('Data and headers count is not matching!')
