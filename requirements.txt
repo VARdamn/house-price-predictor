@@ -3,3 +3,5 @@ uvloop
 aiohttp==3.8.1
 requests
 pydantic-settings
+loguru
+fake-useragent
