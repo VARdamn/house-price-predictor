@@ -1,6 +1,6 @@
 from requests import Session
 from time import sleep
-from random import uniform
+from random import uniform, randint
 from fake_useragent import UserAgent
 import math
 import csv
@@ -70,7 +70,15 @@ class Cyan:
         }
         
         res = self.session.post('https://api.cian.ru/search-offers/v2/search-offers-desktop/', json=payload)
-        if res.status_code > 204:
+        
+        if res.status_code == 429:
+            retry = randint(60, 90)
+            logger.warning(f"Request failed with status {res.status_code}. Retrying in {retry} seconds")
+            sleep(retry)
+            res = self.session.post('https://api.cian.ru/search-offers/v2/search-offers-desktop/', json=payload)
+            if res.status_code > 204:
+                logger.error(f"Can't parse offers from Cyan! Status: {res.status_code}, page: {page}")
+        elif res.status_code > 204:
             logger.error(f"Can't parse offers from Cyan! Status: {res.status_code}, page: {page}")
         
         data = res.json()
@@ -86,7 +94,7 @@ class Cyan:
                 self.__get_offers_paginated(page=page)
             )
             page += 1
-            sleep(uniform(3, 7))
+            sleep(uniform(5, 12))
         
         logger.success(f'Successfully parsed {len(offers)} offers!')
         return offers
