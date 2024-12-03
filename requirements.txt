@@ -1,6 +1,5 @@
-aiogram==2.25.2
+aiogram
 uvloop
-aiohttp==3.8.1
 requests
 pydantic-settings
 loguru
