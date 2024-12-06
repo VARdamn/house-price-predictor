@@ -1,5 +1,6 @@
 import asyncio
 import logging
+
 from src.bot import main
 
 if __name__ == '__main__':

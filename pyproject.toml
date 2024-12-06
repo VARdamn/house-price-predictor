@@ -1,0 +1,9 @@
+[tool.isort]
+profile = "google"
+line_length = 150
+known_first_party = ["src"]
+skip = [".git", "__pycache__", ".venv", "venv", "data"]
+
+[tool.black]
+line-length = 150
+skip-string-normalization = true
