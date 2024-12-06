@@ -20,3 +20,4 @@ def get_help_text():
     for cmd, description in available_commands.items():
         answer_text += cmd + ' - ' + description + '\n'
     return answer_text
+
