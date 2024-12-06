@@ -9,26 +9,10 @@ from aiogram.types import CallbackQuery
 from aiogram.types import Message
 
 from config import config
+from src.bot.constants import available_commands, info_text, get_help_text
 import src.bot.keyboards as kb
 
 router = Router()
-
-available_commands = {
-    '/start': 'Запуск бота',
-    '/info': 'Что умеет этот бот?',
-    '/help': 'Список доступных команд',
-    '/run': 'Запуск модели',
-    '/predict': 'Прогноз стоимости подходящего жилья',
-}
-
-info_text = (
-    'С помощью бота вы можете узнать ожидаемую рыночную стоимость аренды жилья в Москве.\n'
-    'Используйте /predict для прогноза цены на аренду жилья. По запросу бота поочередно вводите '
-    'характеристики квартиры, которые у вас есть.\n'
-    'Пользуйтесь подсказками бота, если не знаете, что выбрать, или характеристика для вас не важна. '
-    'Такие данные будут заменены средними значениями.'
-)
-
 
 class InputForm(StatesGroup):
     floor = State()
@@ -47,14 +31,6 @@ class InputForm(StatesGroup):
     num_cargo_elevators = State()  # ?
     num_elevators = State()  # ?
     parking = State()
-
-
-def get_help_text():
-    global available_commands
-    answer_text = 'Доступные команды: \n'
-    for cmd, description in available_commands.items():
-        answer_text += cmd + ' - ' + description + '\n'
-    return answer_text
 
 
 # def is_integer(text):
@@ -98,11 +74,6 @@ async def cmd_info(message: Message):
     await message.answer(info_text)
 
 
-@router.message(Command('run'))
-async def cmd_run(message: Message):
-    await message.answer('Обучение модели запущено. Пожалуйста, дождитесь ответа.')
-
-
 @router.message(Command('help'))
 async def cmd_help(message: Message) -> None:
     await message.answer(get_help_text())
@@ -115,15 +86,14 @@ async def cmd_predict(message: Message, state: FSMContext):
     await message.answer('Выберите административный округ:', reply_markup=kb.msk_ao)
 
 
-@router.message(InputForm.ao)
-@router.callback_query(F.data.startswith('ao:'))
+@router.callback_query(F.data.startswith('ao:'), InputForm.ao)
 async def step1(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     choice = callback.data.split(':')[1]
     await callback.message.edit_text('Административный округ: ' + choice)
     await state.update_data(ao=choice)
     await state.set_state(InputForm.metro)
-    await callback.message.answer('Станция метро')
+    await callback.message.answer('Сколько минут идти до метро?')
 
 
 @router.message(InputForm.metro)
@@ -142,8 +112,7 @@ async def step3(message: Message, state: FSMContext):
     await message.answer('Есть ли мебель в квартире?', reply_markup=kb.boolean_keyboard(feature=config.FEATURES.HAS_FURNITURE))
 
 
-@router.message(InputForm.with_furniture)
-@router.callback_query(F.data.contains(f'{config.FEATURES.HAS_FURNITURE}:'))
+@router.callback_query(F.data.contains(f'{config.FEATURES.HAS_FURNITURE}:'), InputForm.with_furniture)
 async def step4(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     choice = callback.data.split(':')[1]
