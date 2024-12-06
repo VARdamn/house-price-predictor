@@ -174,4 +174,3 @@ async def callback_handler(callback: CallbackQuery):
 @router.message(F.text)
 async def some_text(message: Message):
     await message.answer('Я вас не понял. Попробуйте /help', reply_markup=kb.basic)
-
