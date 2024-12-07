@@ -33,5 +33,19 @@ def boolean_keyboard(feature: str) -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text='Да', callback_data=f'{feature}:1'),
                 InlineKeyboardButton(text='Нет', callback_data=f'{feature}:0'),
             ],
+            [
+                InlineKeyboardButton(text='Не важно', callback_data=f'{feature}:None')
+            ]
         ]
     )
+
+
+def not_important_btn(feature: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text='Не важно', callback_data=f'{feature}:None')
+            ]
+        ]
+    )
+

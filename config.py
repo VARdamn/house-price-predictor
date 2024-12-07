@@ -12,6 +12,20 @@ class FeaturesModel(BaseModel):
 
     NEED_PARKING: str = 'need_parking'
 
+    AGENT: str = 'agent'
+
+    FLOOR: str = 'floor'
+
+    NUM_FLOORS: str = 'num_floors'
+
+    NUM_BALCONY: str = 'num_balcony'
+
+    NUM_CARGO_ELEVATORS: str = 'num_cargo_elevators'
+
+    NUM_ELEVATORS : str = 'num_elevators'
+
+    KITCHEN_AREA: str = 'kitchen_area'
+
 
 class Settings(BaseSettings):
 

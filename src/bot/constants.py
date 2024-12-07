@@ -21,3 +21,11 @@ def get_help_text():
         answer_text += cmd + ' - ' + description + '\n'
     return answer_text
 
+
+def is_integer(text):
+    while True:
+        try:
+            value = int(text)
+            return True
+        except ValueError:
+            return False
