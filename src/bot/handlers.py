@@ -8,6 +8,7 @@ from config import config
 import src.bot.constants as C
 import src.bot.keyboards as kb
 from src.bot.states import InputForm
+from src.modeling.Predictor import Predictor
 
 router = Router()
 
@@ -162,8 +163,10 @@ async def calculate_predict(callback: CallbackQuery, state: FSMContext):
     await state.update_data(is_seller_agent=int(choice))
 
     data = await state.get_data()
-    for key, value in data.items():
-        print(key, ': ', value, type(value))
+
+    predicted_price = Predictor(data).get_prediction()
+    await callback.message.answer(C.get_prediction_message(data, predicted_price))
+
     await state.clear()
 
 

@@ -31,17 +31,19 @@ class Settings(BaseSettings):
 
     ROOT: str = os.path.dirname(os.path.abspath(__file__))
 
-    BOT_DIR: str = os.path.join(ROOT, 'bot')
+    SRC_DIR: str = os.path.join(ROOT, 'src')
+
+    MODELING_DIR: str = os.path.join(SRC_DIR, 'modeling')
 
     LOGS_DIR: str = os.path.join(ROOT, 'logs')
 
     DATA_DIR: str = os.path.join(ROOT, 'data')
 
-    SRC_DIR: str = os.path.join(ROOT, 'src')
-
     ERROR_LOG_FILE: str = os.path.join(LOGS_DIR, 'error.log')
 
     CYAN_CSV_FILE: str = os.path.join(DATA_DIR, 'cyan_data.csv')
+
+    PIPELINE_FILE: str = os.path.join(MODELING_DIR, 'pipeline.joblib')
 
     FEATURES: FeaturesModel = FeaturesModel()
 

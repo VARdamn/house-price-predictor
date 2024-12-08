@@ -10,7 +10,7 @@ msk_districts = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(text='ЦАО', callback_data='district:ЦАО'),
             InlineKeyboardButton(text='САО', callback_data='district:САО'),
-            InlineKeyboardButton(text='ЗАО', callback_data='district:ЮАО'),
+            InlineKeyboardButton(text='ЗАО', callback_data='district:ЗАО'),
         ],
         [
             InlineKeyboardButton(text='НАО (Новомосковский)', callback_data='district:НАО (Новомосковский)'),
