@@ -5,6 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
+.env
 
 # Distribution / packaging
 .Python
@@ -162,3 +163,5 @@ cython_debug/
 #.idea/
 
 data/
+
+.idea

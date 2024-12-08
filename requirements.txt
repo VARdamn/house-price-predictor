@@ -1,7 +1,12 @@
-aiogram==2.25.2
+aiogram
 uvloop
-aiohttp==3.8.1
 requests
+pydantic
 pydantic-settings
 loguru
 fake-useragent
+flake8
+flake8-import-order
+flake8-quotes
+isort
+black

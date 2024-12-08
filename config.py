@@ -1,6 +1,30 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import ClassVar
 import os
+from typing import ClassVar
+
+from pydantic import BaseModel
+from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
+
+
+class FeaturesModel(BaseModel):
+
+    HAS_FURNITURE: str = 'has_furniture'
+
+    NEED_PARKING: str = 'need_parking'
+
+    AGENT: str = 'agent'
+
+    FLOOR: str = 'floor'
+
+    NUM_FLOORS: str = 'num_floors'
+
+    NUM_BALCONY: str = 'num_balcony'
+
+    NUM_CARGO_ELEVATORS: str = 'num_cargo_elevators'
+
+    NUM_ELEVATORS : str = 'num_elevators'
+
+    KITCHEN_AREA: str = 'kitchen_area'
 
 
 class Settings(BaseSettings):
@@ -19,7 +43,9 @@ class Settings(BaseSettings):
 
     CYAN_CSV_FILE: str = os.path.join(DATA_DIR, 'cyan_data.csv')
 
-    model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(env_file=os.path.join(ROOT, ".env"))
+    FEATURES: FeaturesModel = FeaturesModel()
+
+    model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(env_file=os.path.join(ROOT, '.env'))
 
     TELEGRAM_BOT_TOKEN: str
 

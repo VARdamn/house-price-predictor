@@ -1,7 +1,5 @@
 # House Price Predictor
 
-**Use Python3.11 or lower**
-
 ## Setup
 
 1. **Create virtual environment**
@@ -49,3 +47,17 @@
      ```bash
      python3 main.py
      ```
+
+## Linting & formatting
+
+We are using `flake8` for linting and `black` for formatting.
+
+To lint code:
+```bash
+flake8
+```
+
+To format most of issues:
+```bash
+black .
+```

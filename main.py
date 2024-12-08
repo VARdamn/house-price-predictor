@@ -1,7 +1,8 @@
-from src.service import prepare_files as _
-from src.parsing.Cyan import Cyan
+import asyncio
+import logging
+
+from src.bot import main
 
 if __name__ == '__main__':
-    cyan_api = Cyan()
-    offers = cyan_api.get_parsed_offers()
-    cyan_api.dump_to_csv(offers=offers)
+    logging.basicConfig(level=logging.INFO)
+    asyncio.run(main.run())
