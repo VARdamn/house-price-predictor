@@ -57,7 +57,7 @@ To lint code:
 flake8
 ```
 
-To format most of issues:
+To format code:
 ```bash
 black .
 ```
