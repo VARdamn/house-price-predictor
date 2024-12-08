@@ -1,10 +1,12 @@
-info_text = (
-    'С помощью бота вы можете узнать ожидаемую рыночную стоимость аренды жилья в Москве.\n'
+info_message = (
+    'С помощью бота вы можете узнать ожидаемую рыночную стоимость аренды жилья в Москве.\n\n'
     'Используйте /predict для прогноза цены на аренду жилья. По запросу бота поочередно вводите '
-    'характеристики квартиры, которые у вас есть.\n'
+    'характеристики квартиры, которые у вас есть.\n\n'
     'Пользуйтесь подсказками бота, если не знаете, что выбрать, или характеристика для вас не важна. '
     'Такие данные будут заменены средними значениями.'
 )
+
+misunderstand_message = 'Я вас не понял. Попробуйте /help'
 
 available_commands = {
     '/start': 'Запуск бота',
@@ -13,8 +15,21 @@ available_commands = {
     '/predict': 'Прогноз стоимости подходящего жилья',
 }
 
+bool_map = {
+    '0': 'Нет',
+    '1': 'Да',
+}
 
-def get_help_text():
+
+def boolean_map(key: str) -> str:
+    return bool_map.get(key) or 'Неважно'
+
+
+def get_start_message(user_name: str) -> str:
+    return f'Привет, {user_name}! Этот бот умеет предсказывать цену на аренду недвижимости.'
+
+
+def get_help_message() -> str:
     global available_commands
     answer_text = 'Доступные команды: \n'
     for cmd, description in available_commands.items():
@@ -22,10 +37,5 @@ def get_help_text():
     return answer_text
 
 
-def is_integer(text):
-    while True:
-        try:
-            value = int(text)
-            return True
-        except ValueError:
-            return False
+def is_integer(text: str) -> bool:
+    return text.isdecimal()

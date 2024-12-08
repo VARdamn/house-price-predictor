@@ -5,25 +5,40 @@ basic = InlineKeyboardMarkup(
     inline_keyboard=[[InlineKeyboardButton(text='Команды', callback_data='help'), InlineKeyboardButton(text='О боте', callback_data='info')]]
 )
 
-msk_ao = InlineKeyboardMarkup(
+msk_districts = InlineKeyboardMarkup(
     inline_keyboard=[
         [
-            InlineKeyboardButton(text='ЦАО', callback_data='ao:ЦАО'),
-            InlineKeyboardButton(text='САО', callback_data='ao:САО'),
-            InlineKeyboardButton(text='ЮАО', callback_data='ao:ЮАО'),
+            InlineKeyboardButton(text='ЦАО', callback_data='district:ЦАО'),
+            InlineKeyboardButton(text='САО', callback_data='district:САО'),
+            InlineKeyboardButton(text='ЗАО', callback_data='district:ЮАО'),
         ],
         [
-            InlineKeyboardButton(text='ЗАО', callback_data='ao:ЗАО'),
-            InlineKeyboardButton(text='ВАО', callback_data='ao:ВАО'),
-            InlineKeyboardButton(text='CЗАО', callback_data='ao:СЗАО'),
-        ],
-        [
-            InlineKeyboardButton(text='СВАО', callback_data='ao:СВАО'),
-            InlineKeyboardButton(text='ЮЗАО', callback_data='ao:ЮЗАО'),
-            InlineKeyboardButton(text='ЮВАО', callback_data='ao:ЮВАО'),
+            InlineKeyboardButton(text='НАО (Новомосковский)', callback_data='district:НАО (Новомосковский)'),
+            InlineKeyboardButton(text='Другой', callback_data='district:other'),
         ],
     ]
 )
+
+
+def parking_type() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text='Наземный', callback_data='parking_type:ground:наземный'),
+                InlineKeyboardButton(text='Подземный', callback_data='parking_type:underground:подземный'),
+                InlineKeyboardButton(text='Неважно', callback_data='parking_type:ground:неважно'),
+            ]
+        ]
+    )
+
+
+def lifts_count() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='1', callback_data='lifts_count:1'), InlineKeyboardButton(text='2', callback_data='lifts_count:2')],
+            [InlineKeyboardButton(text='3', callback_data='lifts_count:3'), InlineKeyboardButton(text='4+', callback_data='lifts_count:4+')],
+        ]
+    )
 
 
 def boolean_keyboard(feature: str) -> InlineKeyboardMarkup:
@@ -32,20 +47,6 @@ def boolean_keyboard(feature: str) -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(text='Да', callback_data=f'{feature}:1'),
                 InlineKeyboardButton(text='Нет', callback_data=f'{feature}:0'),
-            ],
-            [
-                InlineKeyboardButton(text='Не важно', callback_data=f'{feature}:None')
             ]
         ]
     )
-
-
-def not_important_btn(feature: str) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text='Не важно', callback_data=f'{feature}:None')
-            ]
-        ]
-    )
-

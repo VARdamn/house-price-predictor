@@ -10,19 +10,19 @@ class FeaturesModel(BaseModel):
 
     HAS_FURNITURE: str = 'has_furniture'
 
-    NEED_PARKING: str = 'need_parking'
+    PARKING_TYPE: str = 'parking_type'
 
-    AGENT: str = 'agent'
+    IS_SELLER_AGENT: str = 'is_seller_agent'
 
     FLOOR: str = 'floor'
 
-    NUM_FLOORS: str = 'num_floors'
+    FLOORS_COUNT: str = 'floors_count'
 
-    NUM_BALCONY: str = 'num_balcony'
+    HAS_BALCONIES: str = 'has_balconies'
 
-    NUM_CARGO_ELEVATORS: str = 'num_cargo_elevators'
+    LIFTS_COUNT: str = 'lifts_count'
 
-    NUM_ELEVATORS : str = 'num_elevators'
+    HAS_CARGO_LIFTS: str = 'has_cargo_lifts'
 
     KITCHEN_AREA: str = 'kitchen_area'
 

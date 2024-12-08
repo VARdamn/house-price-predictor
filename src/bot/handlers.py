@@ -1,236 +1,169 @@
 from aiogram import F
 from aiogram import Router
-from aiogram.filters import Command
-from aiogram.filters import CommandStart
+from aiogram.filters import Command, CommandStart, Filter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, Message
 
 from config import config
-from src.bot.constants import get_help_text, info_text, is_integer
-from src.bot.states import InputForm
+import src.bot.constants as C
 import src.bot.keyboards as kb
+from src.bot.states import InputForm
 
 router = Router()
 
 
+class IsInteger(Filter):
+    async def __call__(self, message: Message) -> bool:
+        return message.text.isdecimal()
+
+
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
-    await message.answer(f'Привет, {message.from_user.first_name}! Этот бот умеет предсказывать цену на аренду недвижимости.', reply_markup=kb.basic)
+    await message.answer(C.get_start_message(message.from_user.first_name), reply_markup=kb.basic)
     await state.clear()
 
 
 @router.message(Command('info'))
-async def cmd_info(message: Message):
-    await message.answer(info_text)
+async def cmd_info(message: Message, state: FSMContext):
+    await message.answer(C.info_message)
+    await state.clear()
 
 
 @router.message(Command('help'))
-async def cmd_help(message: Message):
-    await message.answer(get_help_text())
+async def cmd_help(message: Message, state: FSMContext):
+    await message.answer(C.get_help_message())
+    await state.clear()
 
 
 @router.message(Command('predict'))
 async def cmd_predict(message: Message, state: FSMContext):
-    await message.answer('Вводите характеристики квартиры по запросу бота')
-    await state.set_state(InputForm.ao)
-    await message.answer('Выберите административный округ:', reply_markup=kb.msk_ao)
+    await state.set_state(InputForm.district)
+    await message.answer('Выберите административный округ:', reply_markup=kb.msk_districts)
 
 
-@router.callback_query(F.data.startswith('ao:'), InputForm.ao)
-async def step1(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data.startswith('district:'), InputForm.district)
+async def ask_underground(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     choice = callback.data.split(':')[1]
-    await callback.message.edit_text('Административный округ: ' + f'<i>{choice}</i>')
-    await state.update_data(ao=choice)
-    await state.set_state(InputForm.metro)
+    await callback.message.edit_text(f'Административный округ: <i>{choice}</i>')
+    await state.update_data(district=choice)
+    await state.set_state(InputForm.nearest_underground)
     await callback.message.answer('Сколько минут идти до метро?')
 
 
-@router.message(InputForm.metro)
-async def step2(message: Message, state: FSMContext):
-    while not is_integer(message.text):
-        await message.answer('<b>Пожалуйста, введите только целое число!</b>')
-        return
-    await state.update_data(metro=message.text)
-    await state.set_state(InputForm.num_rooms)
+@router.message(InputForm.nearest_underground, IsInteger())
+async def ask_rooms_count(message: Message, state: FSMContext):
+    await state.update_data(nearest_underground=int(message.text))
+    await state.set_state(InputForm.rooms_count)
     await message.answer('Сколько комнат в квартире?')
 
 
-@router.message(InputForm.num_rooms)
-async def step3(message: Message, state: FSMContext):
-    while not is_integer(message.text):
-        await message.answer('<b>Пожалуйста, введите только целое число!</b>')
-        return
-    await state.update_data(num_rooms=message.text)
-    await state.set_state(InputForm.with_furniture)
+@router.message(InputForm.rooms_count, IsInteger())
+async def ask_has_furniture(message: Message, state: FSMContext):
+    await state.update_data(rooms_count=int(message.text))
+    await state.set_state(InputForm.has_furniture)
     await message.answer('Есть ли мебель в квартире?', reply_markup=kb.boolean_keyboard(feature=config.FEATURES.HAS_FURNITURE))
 
 
-@router.callback_query(F.data.contains(f'{config.FEATURES.HAS_FURNITURE}:'), InputForm.with_furniture)
-async def step4(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data.contains(f'{config.FEATURES.HAS_FURNITURE}:'), InputForm.has_furniture)
+async def ask_area(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     choice = callback.data.split(':')[1]
-    if choice == '1':
-        await callback.message.edit_text('Мебель: <i>Да</i>')
-    elif choice == '0':
-        await callback.message.edit_text('Мебель: <i>Нет</i>')
-    else:
-        await callback.message.edit_text('Мебель: <i>Не важно</i>')
-    await state.update_data(with_furniture=choice)
+    await callback.message.edit_text(f'Есть ли мебель? <i>{C.boolean_map(choice)}</i>')
+    await state.update_data(has_furniture=int(choice))
     await state.set_state(InputForm.area)
     await callback.message.answer('Какова площадь квартиры?')
 
 
-@router.message(InputForm.area)
-async def step5(message: Message, state: FSMContext):
-    while not is_integer(message.text):
-        await message.answer('<b>Пожалуйста, введите только целое число!</b>')
-        return
-    await state.update_data(area=message.text)
+@router.message(InputForm.area, IsInteger())
+async def ask_living_area(message: Message, state: FSMContext):
+    await state.update_data(area=int(message.text))
+    await state.set_state(InputForm.living_area)
+    await message.answer('Какова жилая площадь?')
+
+
+@router.message(InputForm.living_area, IsInteger())
+async def ask_kitchen_area(message: Message, state: FSMContext):
+    await state.update_data(living_area=int(message.text))
+    await state.set_state(InputForm.kitchen_area)
+    await message.answer('Какова площадь кухни?')
+
+
+@router.message(InputForm.kitchen_area, IsInteger())
+async def ask_floors_count(message: Message, state: FSMContext):
+    await state.update_data(kitchen_area=int(message.text))
+    await state.set_state(InputForm.floors_count)
+    await message.answer('Сколько этажей в доме?')
+
+
+@router.message(InputForm.floors_count, IsInteger())
+async def ask_floor(message: Message, state: FSMContext):
+    await state.update_data(floors_count=int(message.text))
     await state.set_state(InputForm.floor)
-    await message.answer('На каком этаже квартира?', reply_markup=kb.not_important_btn(config.FEATURES.FLOOR))
+    await message.answer('На каком этаже квартира?')
 
 
-@router.callback_query(F.data.contains(f'{config.FEATURES.FLOOR}:'), InputForm.floor)
-async def step6(callback : CallbackQuery, state: FSMContext):
-    await state.update_data(floor='None')
-    await callback.message.edit_text('Этаж: <i>Не важно</i>')
-    await state.set_state(InputForm.num_floors)
-    await callback.message.answer('Сколько этажей в доме?', reply_markup=kb.not_important_btn(config.FEATURES.NUM_FLOORS))
-
-
-@router.message(InputForm.floor)
-async def step6(message: Message, state: FSMContext):
-    while not is_integer(message.text):
-        await message.answer('<b>Пожалуйста, введите только целое число!</b>')
+@router.message(InputForm.floor, IsInteger())
+async def ask_parking_type(message: Message, state: FSMContext):
+    floors_count = (await state.get_data()).get('floors_count', 0)
+    while int(message.text) > floors_count:
+        await message.answer(f'Этаж не может быть больше {floors_count}. Попробуйте снова.')
         return
-    await state.update_data(floor=message.text)
-    await state.set_state(InputForm.num_floors)
-    await message.answer('Сколько этажей в доме?', reply_markup=kb.not_important_btn(config.FEATURES.NUM_FLOORS))
+    await state.update_data(floor=int(message.text))
+    await state.set_state(InputForm.parking_type)
+    await message.answer('Какой нужен паркинг?', reply_markup=kb.parking_type())
 
 
-@router.callback_query(F.data.contains(f'{config.FEATURES.NUM_FLOORS}:'), InputForm.num_floors)
-async def step7(callback : CallbackQuery, state: FSMContext):
-    await state.update_data(num_floors='None')
-    await callback.message.edit_text('Количество этажей: <i>Не важно</i>')
-    await state.set_state(InputForm.parking)
-    await callback.message.answer('Нужен ли паркинг?', reply_markup=kb.boolean_keyboard(feature=config.FEATURES.NEED_PARKING))
+@router.callback_query(F.data.contains(config.FEATURES.PARKING_TYPE), InputForm.parking_type)
+async def ask_has_balconies(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    _, choice, text = callback.data.split(':')
+    await callback.message.edit_text(f'Паркинг: <i>{text}</i>')
+    await state.update_data(parking_type=choice)
+    await state.set_state(InputForm.has_balconies)
+    await callback.message.answer('Нужен ли балкон в квартире?', reply_markup=kb.boolean_keyboard(feature=config.FEATURES.HAS_BALCONIES))
 
 
-@router.message(InputForm.num_floors)
-async def step7(message: Message, state: FSMContext):
-    while not is_integer(message.text):
-        await message.answer('<b>Пожалуйста, введите только целое число!</b>')
-        return
-    await state.update_data(num_floors=message.text)
-    await state.set_state(InputForm.parking)
-    await message.answer('Нужен ли паркинг?', reply_markup=kb.boolean_keyboard(feature=config.FEATURES.NEED_PARKING))
-
-
-@router.callback_query(F.data.contains(f'{config.FEATURES.NEED_PARKING}:'), InputForm.parking)
-async def step8(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data.contains(config.FEATURES.HAS_BALCONIES), InputForm.has_balconies)
+async def ask_lifts_count(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     choice = callback.data.split(':')[1]
-    if choice == '1':
-        await callback.message.edit_text('Паркинг: <i>Да</i>')
-    elif choice == '0':
-        await callback.message.edit_text('Паркинг: <i>Нет</i>')
-    else:
-        await callback.message.edit_text('Паркинг: <i>Не важно</i>')
-    await state.update_data(parking=choice)
-    await state.set_state(InputForm.num_balcony)
-    await callback.message.answer('Сколько балконов в квартире?', reply_markup=kb.not_important_btn(config.FEATURES.NUM_BALCONY))
+    await state.update_data(has_balconies=int(choice))
+    await callback.message.edit_text(f'Нужен балкон? <i>{C.boolean_map(choice)}</i>')
+    await state.set_state(InputForm.lifts_count)
+    await callback.message.answer('Сколько лифтов нужно?', reply_markup=kb.lifts_count())
 
 
-@router.callback_query(F.data.contains(f'{config.FEATURES.NUM_BALCONY}:'), InputForm.num_balcony)
-async def step9(callback : CallbackQuery, state: FSMContext):
-    await state.update_data(num_balcony='None')
-    await callback.message.edit_text('Количество балконов: <i>Не важно</i>')
-    await state.set_state(InputForm.num_cargo_elevators)
-    await callback.message.answer('Сколько грузовых лифтов в доме?', reply_markup=kb.not_important_btn(config.FEATURES.NUM_CARGO_ELEVATORS))
-
-
-@router.message(InputForm.num_balcony)
-async def step9(message: Message, state: FSMContext):
-    while not is_integer(message.text):
-        await message.answer('<b>Пожалуйста, введите только целое число!</b>')
-        return
-    await state.update_data(num_balcony=message.text)
-    await state.set_state(InputForm.num_cargo_elevators)
-    await message.answer('Сколько грузовых лифтов в доме?',  reply_markup=kb.not_important_btn(config.FEATURES.NUM_CARGO_ELEVATORS))
-
-
-@router.callback_query(F.data.contains(f'{config.FEATURES.NUM_CARGO_ELEVATORS}:'), InputForm.num_cargo_elevators)
-async def step10(callback : CallbackQuery, state: FSMContext):
-    await state.update_data(num_cargo_elevators='None')
-    await callback.message.edit_text('Количество грузовых лифтов: <i>Не важно</i>')
-    await state.set_state(InputForm.num_elevators)
-    await callback.message.answer('Сколько пассажирских лифтов в доме?', reply_markup=kb.not_important_btn(config.FEATURES.NUM_ELEVATORS))
-
-
-@router.message(InputForm.num_cargo_elevators)
-async def step10(message: Message, state: FSMContext):
-    while not is_integer(message.text):
-        await message.answer('<b>Пожалуйста, введите только целое число!</b>')
-        return
-    await state.update_data(num_cargo_elevators=message.text)
-    await state.set_state(InputForm.num_elevators)
-    await message.answer('Сколько пассажирских лифтов в доме?', reply_markup=kb.not_important_btn(config.FEATURES.NUM_ELEVATORS))
-
-
-@router.callback_query(F.data.contains(f'{config.FEATURES.NUM_ELEVATORS}:'), InputForm.num_elevators)
-async def step11(callback : CallbackQuery, state: FSMContext):
-    await state.update_data(num_elevators='None')
-    await callback.message.edit_text('Количество пассажирских лифтов: <i>Не важно</i>')
-    await state.set_state(InputForm.kitchen_area)
-    await callback.message.answer('Какова площадь кухни?', reply_markup=kb.not_important_btn(config.FEATURES.KITCHEN_AREA))
-
-
-@router.message(InputForm.num_elevators)
-async def step11(message: Message, state: FSMContext):
-    while not is_integer(message.text):
-        await message.answer('<b>Пожалуйста, введите только целое число!</b>')
-        return
-    await state.update_data(num_elevators=message.text)
-    await state.set_state(InputForm.kitchen_area)
-    await message.answer('Какова площадь кухни?', reply_markup=kb.not_important_btn(config.FEATURES.KITCHEN_AREA))
-
-
-@router.callback_query(F.data.contains(f'{config.FEATURES.KITCHEN_AREA}:'), InputForm.kitchen_area)
-async def step12(callback : CallbackQuery, state: FSMContext):
-    await state.update_data(kitchen_area='None')
-    await callback.message.edit_text('Площадь кухни: <i>Не важно</i>')
-    await state.set_state(InputForm.agent)
-    await callback.message.answer('Продажа от агента?', reply_markup=kb.boolean_keyboard(feature=config.FEATURES.AGENT))
-
-
-@router.message(InputForm.kitchen_area)
-async def step12(message: Message, state: FSMContext):
-    while not is_integer(message.text):
-        await message.answer('<b>Пожалуйста, введите только целое число!</b>')
-        return
-    await state.update_data(kitchen_area=message.text)
-    await state.set_state(InputForm.agent)
-    await message.answer('Продажа от агента?', reply_markup=kb.boolean_keyboard(feature=config.FEATURES.AGENT))
-
-
-@router.callback_query(F.data.contains(f'{config.FEATURES.AGENT}:'), InputForm.agent)
-async def step13(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data.contains(config.FEATURES.LIFTS_COUNT), InputForm.lifts_count)
+async def ask_has_cargo_lifts(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     choice = callback.data.split(':')[1]
+    await state.update_data(lifts_count=choice)
+    await callback.message.edit_text(f'Количество лифтов: <i>{choice}</i>')
+    await state.set_state(InputForm.has_cargo_lifts)
+    await callback.message.answer('Нужен ли грузовой лифт?', reply_markup=kb.boolean_keyboard(feature=config.FEATURES.HAS_CARGO_LIFTS))
 
-    if choice == '1':
-        await callback.message.edit_text('Продажа от агента: <i>Да</i>')
-    elif choice == '0':
-        await callback.message.edit_text('Продажа от агента: <i>Нет</i>')
-    else:
-        await callback.message.edit_text('Продажа от агента: <i>Не важно</i>')
-    await state.update_data(agent=choice)
+
+@router.callback_query(F.data.contains(config.FEATURES.HAS_CARGO_LIFTS), InputForm.has_cargo_lifts)
+async def ask_is_seller_agent(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    choice = callback.data.split(':')[1]
+    await state.update_data(has_cargo_lifts=int(choice))
+    await callback.message.edit_text(f'Нужен ли грузовой лифт?: <i>{C.boolean_map(choice)}</i>')
+    await state.set_state(InputForm.is_seller_agent)
+    await callback.message.answer('Продажа от агента?', reply_markup=kb.boolean_keyboard(feature=config.FEATURES.IS_SELLER_AGENT))
+
+
+@router.callback_query(F.data.contains(config.FEATURES.IS_SELLER_AGENT), InputForm.is_seller_agent)
+async def calculate_predict(callback: CallbackQuery, state: FSMContext):
+    await callback.answer()
+    choice = callback.data.split(':')[1]
+    await callback.message.edit_text(f'Продажа от агента: <i>{C.boolean_map(choice)}</i>')
+    await state.update_data(is_seller_agent=int(choice))
 
     data = await state.get_data()
     for key, value in data.items():
-        print(key, ' : ', value)
+        print(key, ': ', value, type(value))
     await state.clear()
 
 
@@ -239,12 +172,25 @@ async def callback_handler(callback: CallbackQuery):
     await callback.answer()
 
     if callback.data == 'help':
-        await callback.message.answer(get_help_text())
+        await callback.message.answer(C.get_help_message())
 
     elif callback.data == 'info':
-        await callback.message.answer(info_text)
+        await callback.message.answer(C.info_message)
 
 
-@router.message(F.text)
-async def some_text(message: Message):
-    await message.answer('Я вас не понял. Попробуйте /help', reply_markup=kb.basic)
+@router.message(lambda message, state: True)
+async def invalid_input(message: Message, state: FSMContext):
+
+    form_integer_states = [
+        InputForm.nearest_underground.state,
+        InputForm.rooms_count.state,
+        InputForm.area.state,
+        InputForm.living_area.state,
+        InputForm.kitchen_area.state,
+        InputForm.floors_count.state,
+        InputForm.floor.state,
+    ]
+    current_state = await state.get_state()
+
+    if current_state in form_integer_states:
+        await message.answer('<b>Пожалуйста, введите только целое число!</b>')
