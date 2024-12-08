@@ -62,7 +62,3 @@ def get_help_message() -> str:
     for cmd, description in available_commands.items():
         answer_text += cmd + ' - ' + description + '\n'
     return answer_text
-
-
-def is_integer(text: str) -> bool:
-    return text.isdecimal()
