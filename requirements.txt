@@ -10,3 +10,13 @@ flake8-import-order
 flake8-quotes
 isort
 black
+numpy
+pandas
+category-encoders
+sklearn
+scikit-learn
+xgboost
+matplotlib
+catboost
+optuna
+seaborn
