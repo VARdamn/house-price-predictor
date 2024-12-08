@@ -13,7 +13,6 @@ black
 numpy
 pandas
 category-encoders
-sklearn
 scikit-learn
 xgboost
 matplotlib
